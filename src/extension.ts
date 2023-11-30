@@ -32,7 +32,6 @@ export function activate(context: vscode.ExtensionContext) {
       if (lastActiveFiles && lastActiveFiles.length > 0) {
         const fileToOpen = lastActiveFiles[1];
         const document = await vscode.workspace.openTextDocument(fileToOpen);
-        console.log("SWITCHING TO", fileToOpen, document);
         await vscode.window.showTextDocument(document, viewColumn);
       }
     }
@@ -60,10 +59,9 @@ function updateLastActiveFiles(currentUri: vscode.Uri, viewColumn: number) {
     (lastActiveFiles.length === 0 ||
       lastActiveFiles[0].toString() !== currentUri.toString())
   ) {
-    console.log("pushing url", currentUri.toString());
     lastActiveFiles.unshift(currentUri);
 
-    // Ensure we only track the last two files per group
+    // Ensure we only track the last two files per editor group
     if (lastActiveFiles.length > 2) {
       lastActiveFiles.pop();
     }

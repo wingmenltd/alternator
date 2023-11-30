@@ -8,9 +8,19 @@
     "url": "https://github.com/wingmenltd/alternator.git"
   },
   "publisher": "wingmen",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.84.0"
   },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "navigate",
+    "alternate",
+    "switch"
+  ],
+  "homepage": "https://github.com/wingmenltd/alternator",
   "icon": "images/icon.png",
   "categories": [
     "Other"
