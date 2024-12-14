@@ -1,8 +1,8 @@
 {
   "name": "alternator",
   "displayName": "Alternator",
-  "description": "Cycle between the two last active files",
-  "version": "1.0.0",
+  "description": "Cycle between the two last active files & navigate through changes",
+  "version": "1.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/wingmenltd/alternator.git"
@@ -18,13 +18,11 @@
   "keywords": [
     "navigate",
     "alternate",
-    "switch"
+    "switch",
+    "changes"
   ],
   "homepage": "https://github.com/wingmenltd/alternator",
   "icon": "images/icon.png",
-  "categories": [
-    "Other"
-  ],
   "activationEvents": [
     "onStartupFinished"
   ],
@@ -33,7 +31,18 @@
     "commands": [
       {
         "command": "alternator.switch",
-        "title": "Alternate between the two last active files"
+        "title": "Switch between two last active files",
+        "category": "Alternator"
+      },
+      {
+        "command": "alternator.nextChange",
+        "title": "Next change",
+        "category": "Alternator"
+      },
+      {
+        "command": "alternator.previousChange",
+        "title": "Previous change",
+        "category": "Alternator"
       }
     ],
     "keybindings": [
@@ -41,6 +50,18 @@
         "command": "alternator.switch",
         "key": "ctrl+alt+a",
         "mac": "cmd+alt+a",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "alternator.nextChange",
+        "key": "ctrl+alt+n",
+        "mac": "cmd+alt+n",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "alternator.previousChange",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p",
         "when": "editorTextFocus"
       }
     ]
