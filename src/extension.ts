@@ -100,49 +100,55 @@ const getChangedFiles = async () => {
   const gitExtension =
     vscode.extensions.getExtension<any>("vscode.git")!.exports;
   const git = gitExtension.getAPI(1);
-  const workspaceUri = vscode.workspace.workspaceFolders?.map(
-    (ws) => ws.uri
-  )[0];
-  const activeRepo =
-    git.getRepository(workspaceUri?.path) || git.repositories[0];
 
-  // Get the changes with their original data
-  const changes = await activeRepo.state.workingTreeChanges;
+  // Use all repositories instead of just one
+  const repositories = git.repositories;
+  let allChangedFiles: any[] = [];
 
-  const changedFiles = changes.map((change: any) => {
-    // Get the diff details for each change
-    const diffDetails = change.originalUri
-      ? activeRepo.diffWithHEAD(change.uri.fsPath)
-      : activeRepo.diffWithWorkingTree(change.uri.fsPath);
+  // Process each repository
+  for (const repo of repositories) {
+    // Get the changes for this repository
+    const changes = await repo.state.workingTreeChanges;
 
-    return {
-      uri: change.uri,
-      path: change.uri.path,
-      // We'll update this once we have the diff details
-      firstChangeLine: 0,
-      diffDetails: diffDetails,
-    };
-  });
-
-  // Wait for all diff details to be resolved
-  const filesWithDiffs = await Promise.all(
-    changedFiles.map(async (file: any) => {
-      const diff = await file.diffDetails;
-      // Extract the line number from the git diff
-      const match = diff ? diff.match(/@@ -(\d+)/) : null;
-      const lineFromDiff = match ? parseInt(match[1]) : 0;
-
-      // Only add the offset if it's not the first line
-      const firstChangeLine = lineFromDiff === 1 ? 0 : lineFromDiff + 2;
+    const repoChangedFiles = changes.map((change: any) => {
+      // Get the diff details for each change
+      const diffDetails = change.originalUri
+        ? repo.diffWithHEAD(change.uri.fsPath)
+        : repo.diffWithWorkingTree(change.uri.fsPath);
 
       return {
-        ...file,
-        firstChangeLine: Math.max(firstChangeLine, 0), // Ensure we don't get negative lines
+        uri: change.uri,
+        path: change.uri.fsPath, // Use fsPath to get the full path consistently
+        // We'll update this once we have the diff details
+        firstChangeLine: 0,
+        diffDetails: diffDetails,
+        repoName: repo.rootUri.path, // Store repository info to help with identification
       };
-    })
-  );
+    });
 
-  return filesWithDiffs.sort(orderFiles);
+    // Wait for all diff details to be resolved for this repo
+    const filesWithDiffs = await Promise.all(
+      repoChangedFiles.map(async (file: any) => {
+        const diff = await file.diffDetails;
+        // Extract the line number from the git diff
+        const match = diff ? diff.match(/@@ -(\d+)/) : null;
+        const lineFromDiff = match ? parseInt(match[1]) : 0;
+
+        // Only add the offset if it's not the first line
+        const firstChangeLine = lineFromDiff === 1 ? 0 : lineFromDiff + 2;
+
+        return {
+          ...file,
+          firstChangeLine: Math.max(firstChangeLine, 0), // Ensure we don't get negative lines
+        };
+      })
+    );
+
+    // Add this repository's changes to our collection
+    allChangedFiles = allChangedFiles.concat(filesWithDiffs);
+  }
+
+  return allChangedFiles.sort(orderFiles);
 };
 
 const openPreviousFile = async () => {
@@ -151,7 +157,7 @@ const openPreviousFile = async () => {
   if (!activeEditor) {
     return;
   }
-  const currentFilename = activeEditor.document.uri.path;
+  const currentFilename = activeEditor.document.uri.fsPath;
   const currentIndex = changedFiles.findIndex(
     (file: any) => file.path === currentFilename
   );
@@ -180,7 +186,7 @@ const openNextFile = async () => {
   if (!activeEditor) {
     return;
   }
-  const currentFilename = activeEditor.document.uri.path;
+  const currentFilename = activeEditor.document.uri.fsPath;
   const currentIndex = changedFiles.findIndex(
     (file: any) => file.path === currentFilename
   );
