@@ -128,11 +128,16 @@ const getChangedFiles = async () => {
   const filesWithDiffs = await Promise.all(
     changedFiles.map(async (file: any) => {
       const diff = await file.diffDetails;
-      // Extract the line number and add 3 to skip the GIT unified diff context lines
-      const firstChangeLine = diff ? parseInt(diff.split("@@ -")[1]) + 3 : 0;
+      // Extract the line number from the git diff
+      const match = diff ? diff.match(/@@ -(\d+)/) : null;
+      const lineFromDiff = match ? parseInt(match[1]) : 0;
+
+      // Only add the offset if it's not the first line
+      const firstChangeLine = lineFromDiff === 1 ? 0 : lineFromDiff + 2;
+
       return {
         ...file,
-        firstChangeLine: Math.max(firstChangeLine - 1, 0), // Convert to 0-based line number
+        firstChangeLine: Math.max(firstChangeLine, 0), // Ensure we don't get negative lines
       };
     })
   );
