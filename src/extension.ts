@@ -29,7 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
       const lastActiveFiles = lastActiveFilesPerGroup.get(viewColumn);
 
       // Switch to the last active file within the same group, if available
-      if (lastActiveFiles && lastActiveFiles.length > 0) {
+      if (lastActiveFiles && lastActiveFiles.length > 1) {
         const fileToOpen = lastActiveFiles[1];
         const document = await vscode.workspace.openTextDocument(fileToOpen);
         await vscode.window.showTextDocument(document, viewColumn);
@@ -51,7 +51,21 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  context.subscriptions.push(disposable1, disposable2, disposable3);
+  let disposable4 = vscode.commands.registerCommand(
+    "alternator.nextFileWithChanges",
+    async () => {
+      await openNextFile();
+    }
+  );
+
+  let disposable5 = vscode.commands.registerCommand(
+    "alternator.previousFileWithChanges",
+    async () => {
+      await openPreviousFile();
+    }
+  );
+
+  context.subscriptions.push(disposable1, disposable2, disposable3, disposable4, disposable5);
 
   vscode.window.onDidChangeActiveTextEditor((editor) => {
     if (editor && editor.document.uri && editor.viewColumn !== undefined) {
@@ -61,6 +75,10 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {}
+
+export function clearFileHistory() {
+  lastActiveFilesPerGroup.clear();
+}
 
 const orderFiles = (a: any, b: any): number => {
   const filenameA = a.uri.path.toLowerCase().split("/");
@@ -108,13 +126,11 @@ const getChangedFiles = async () => {
   // Process each repository
   for (const repo of repositories) {
     // Get the changes for this repository
-    const changes = await repo.state.workingTreeChanges;
+    const changes = repo.state.workingTreeChanges;
 
     const repoChangedFiles = changes.map((change: any) => {
       // Get the diff details for each change
-      const diffDetails = change.originalUri
-        ? repo.diffWithHEAD(change.uri.fsPath)
-        : repo.diffWithWorkingTree(change.uri.fsPath);
+      const diffDetails = repo.diffWithHEAD(change.uri.fsPath);
 
       return {
         uri: change.uri,
@@ -157,6 +173,12 @@ const openPreviousFile = async () => {
   if (!activeEditor) {
     return;
   }
+  
+  if (changedFiles.length === 0) {
+    vscode.window.showInformationMessage('No changed files in the workspace');
+    return;
+  }
+  
   const currentFilename = activeEditor.document.uri.fsPath;
   const currentIndex = changedFiles.findIndex(
     (file: any) => file.path === currentFilename
@@ -171,13 +193,16 @@ const openPreviousFile = async () => {
   if (!isPreview) {
     await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
   }
-  await vscode.commands.executeCommand(
-    "workbench.action.files.openFile",
-    previousFile
-  );
-  await vscode.commands.executeCommand(
-    "workbench.action.editor.previousChange"
-  );
+  const uri = vscode.Uri.file(previousFile.path);
+  const document = await vscode.workspace.openTextDocument(uri);
+  await vscode.window.showTextDocument(document, {
+    selection: new vscode.Selection(
+      previousFile.firstChangeLine || 0,
+      0,
+      previousFile.firstChangeLine || 0,
+      0
+    ),
+  });
 };
 
 const openNextFile = async () => {
@@ -186,6 +211,12 @@ const openNextFile = async () => {
   if (!activeEditor) {
     return;
   }
+  
+  if (changedFiles.length === 0) {
+    vscode.window.showInformationMessage('No changed files in the workspace');
+    return;
+  }
+  
   const currentFilename = activeEditor.document.uri.fsPath;
   const currentIndex = changedFiles.findIndex(
     (file: any) => file.path === currentFilename

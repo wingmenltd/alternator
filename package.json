@@ -2,7 +2,7 @@
   "name": "alternator",
   "displayName": "Alternator",
   "description": "Cycle between the two last active files & navigate through changes",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/wingmenltd/alternator.git"
@@ -43,6 +43,16 @@
         "command": "alternator.previousChange",
         "title": "Previous change",
         "category": "Alternator"
+      },
+      {
+        "command": "alternator.nextFileWithChanges",
+        "title": "Next file with changes",
+        "category": "Alternator"
+      },
+      {
+        "command": "alternator.previousFileWithChanges",
+        "title": "Previous file with changes",
+        "category": "Alternator"
       }
     ],
     "keybindings": [
@@ -63,6 +73,18 @@
         "key": "ctrl+alt+p",
         "mac": "cmd+alt+p",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "alternator.nextFileWithChanges",
+        "key": "ctrl+alt+shift+n",
+        "mac": "cmd+alt+shift+n",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "alternator.previousFileWithChanges",
+        "key": "ctrl+alt+shift+p",
+        "mac": "cmd+alt+shift+p",
+        "when": "editorTextFocus"
       }
     ]
   },
@@ -79,11 +101,13 @@
     "@types/vscode": "^1.84.0",
     "@types/mocha": "^10.0.3",
     "@types/node": "18.x",
+    "@types/sinon": "^17.0.2",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
     "eslint": "^8.52.0",
     "glob": "^10.3.10",
     "mocha": "^10.2.0",
+    "sinon": "^17.0.1",
     "typescript": "^5.2.2",
     "@vscode/test-electron": "^2.3.6"
   }
