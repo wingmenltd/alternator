@@ -45,6 +45,11 @@ By default the extensions adds the following keybinding:
       }
     ]
 
+## Publishing
+
+- vsce package
+- https://marketplace.visualstudio.com/manage/publishers/wingmen
+
 ## Release Notes
 
 ### 1.2.0
