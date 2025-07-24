@@ -65,7 +65,13 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  context.subscriptions.push(disposable1, disposable2, disposable3, disposable4, disposable5);
+  context.subscriptions.push(
+    disposable1,
+    disposable2,
+    disposable3,
+    disposable4,
+    disposable5
+  );
 
   vscode.window.onDidChangeActiveTextEditor((editor) => {
     if (editor && editor.document.uri && editor.viewColumn !== undefined) {
@@ -79,6 +85,92 @@ export function deactivate() {}
 export function clearFileHistory() {
   lastActiveFilesPerGroup.clear();
 }
+
+const isTextFile = (filePath: string): boolean => {
+  const binaryExtensions = [
+    // Images
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".bmp",
+    ".ico",
+    ".svg",
+    ".webp",
+    ".tiff",
+    ".tif",
+    // Documents
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".ppt",
+    ".pptx",
+    ".odt",
+    ".ods",
+    ".odp",
+    // Archives
+    ".zip",
+    ".rar",
+    ".tar",
+    ".gz",
+    ".7z",
+    ".bz2",
+    ".xz",
+    // Media
+    ".mp3",
+    ".mp4",
+    ".avi",
+    ".mov",
+    ".mkv",
+    ".flv",
+    ".wmv",
+    ".m4v",
+    ".mpg",
+    ".mpeg",
+    ".wav",
+    ".flac",
+    ".aac",
+    ".ogg",
+    ".wma",
+    ".m4a",
+    // Executables and binaries
+    ".exe",
+    ".dll",
+    ".so",
+    ".dylib",
+    ".app",
+    ".deb",
+    ".rpm",
+    ".dmg",
+    ".pkg",
+    // Fonts
+    ".ttf",
+    ".otf",
+    ".woff",
+    ".woff2",
+    ".eot",
+    // Data files
+    ".db",
+    ".sqlite",
+    ".mdb",
+    ".accdb",
+    // Other binary formats
+    ".pyc",
+    ".pyo",
+    ".class",
+    ".o",
+    ".a",
+    ".lib",
+    ".bin",
+    ".dat",
+    ".iso",
+  ];
+
+  const extension = filePath.toLowerCase().substring(filePath.lastIndexOf("."));
+  return !binaryExtensions.includes(extension);
+};
 
 const orderFiles = (a: any, b: any): number => {
   const filenameA = a.uri.path.toLowerCase().split("/");
@@ -164,7 +256,10 @@ const getChangedFiles = async () => {
     allChangedFiles = allChangedFiles.concat(filesWithDiffs);
   }
 
-  return allChangedFiles.sort(orderFiles);
+  // Filter out binary files
+  const textFiles = allChangedFiles.filter((file) => isTextFile(file.path));
+
+  return textFiles.sort(orderFiles);
 };
 
 const openPreviousFile = async () => {
@@ -173,12 +268,12 @@ const openPreviousFile = async () => {
   if (!activeEditor) {
     return;
   }
-  
+
   if (changedFiles.length === 0) {
-    vscode.window.showInformationMessage('No changed files in the workspace');
+    vscode.window.showInformationMessage("No changed files in the workspace");
     return;
   }
-  
+
   const currentFilename = activeEditor.document.uri.fsPath;
   const currentIndex = changedFiles.findIndex(
     (file: any) => file.path === currentFilename
@@ -211,12 +306,12 @@ const openNextFile = async () => {
   if (!activeEditor) {
     return;
   }
-  
+
   if (changedFiles.length === 0) {
-    vscode.window.showInformationMessage('No changed files in the workspace');
+    vscode.window.showInformationMessage("No changed files in the workspace");
     return;
   }
-  
+
   const currentFilename = activeEditor.document.uri.fsPath;
   const currentIndex = changedFiles.findIndex(
     (file: any) => file.path === currentFilename
